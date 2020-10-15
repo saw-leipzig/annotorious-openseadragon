@@ -3,11 +3,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Emitter from 'tiny-emitter';
 import OpenSeadragonAnnotator from './OpenSeadragonAnnotator';
-import { Environment, WebAnnotation, addPolyfills, setLocale } from '@recogito/recogito-client-core';
+import {
+  WebAnnotation,
+  createEnvironment,
+  setLocale
+} from '@recogito/recogito-client-core';
 
-import '@babel/polyfill';
-addPolyfills(); // Extra polyfills that babel doesn't include
-
+import '@recogito/annotorious/src/ImageAnnotator.scss';
 import '@recogito/recogito-client-core/themes/default';
 
 class OSDAnnotorious {
@@ -18,6 +20,8 @@ class OSDAnnotorious {
     this._app = React.createRef();
 
     this._emitter = new Emitter();
+
+    this._env = createEnvironment();
 
     const viewerEl = viewer.element;
 
@@ -39,6 +43,8 @@ class OSDAnnotorious {
         tree = {config.tree}
         image = {config.image}
         tagVocabulary={config.tagVocabulary}
+        config={config}
+        env={this._env}
         onAnnotationSelected={this.handleAnnotationSelected}
         onAnnotationCreated={this.handleAnnotationCreated}
         onAnnotationUpdated={this.handleAnnotationUpdated}
@@ -55,8 +61,8 @@ class OSDAnnotorious {
   handleSelectionCanceled = annotation =>
     this._emitter.emit('cancelSelection', annotation._stub);
 
-  handleAnnotationCreated = annotation =>
-    this._emitter.emit('createAnnotation', annotation.underlying);
+  handleAnnotationCreated = (annotation, overrideId) =>
+    this._emitter.emit('createAnnotation', annotation.underlying, overrideId);
 
   handleAnnotationDeleted = annotation =>
     this._emitter.emit('deleteAnnotation', annotation.underlying);
@@ -85,7 +91,7 @@ class OSDAnnotorious {
     this._app.current.addAnnotation(new WebAnnotation(annotation));
 
   clearAuthInfo = () =>
-    Environment.user = null;
+    this._env.user = null;
 
   destroy = () =>
     ReactDOM.unmountComponentAtNode(this.appContainerEl);
@@ -139,7 +145,7 @@ class OSDAnnotorious {
   }
 
   setAuthInfo = authinfo =>
-    Environment.user = authinfo;
+    this._env.user = authinfo;
 
   setDrawingEnabled = enable =>
     this._app.current.setDrawingEnabled(enable);
@@ -148,7 +154,7 @@ class OSDAnnotorious {
     this._app.current.setDrawingTool(shape);
 
   setServerTime = timestamp =>
-    Environment.setServerTime(timestamp);
+    this._env.setServerTime(timestamp);
 
 }
 

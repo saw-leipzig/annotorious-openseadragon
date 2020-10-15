@@ -1,7 +1,7 @@
 import EventEmitter from 'tiny-emitter';
 import OpenSeadragon from 'openseadragon';
 import { SVG_NAMESPACE } from '../SVGConst';
-import { DrawingTools, drawShape, parseRectFragment } from '@recogito/annotorious';
+import { DrawingTools, drawShape, parseRectFragment } from '@recogito/annotorious/src';
 
 export default class OSDAnnotationLayer extends EventEmitter {
 
@@ -21,14 +21,26 @@ export default class OSDAnnotationLayer extends EventEmitter {
     this.viewer.canvas.appendChild(this.svg);
 
     this.viewer.addHandler('animation', () => this.resize());
-    this.viewer.addHandler('open', () => this.resize());
     this.viewer.addHandler('rotate', () => this.resize());
     this.viewer.addHandler('resize', () => this.resize());
+
+    this.viewer.addHandler('open', () => {
+      // Store image properties to environment
+      const { x, y } = this.viewer.world.getItemAt(0).source.dimensions;
+
+      props.env.image = {
+        src: this.viewer.world.getItemAt(0).source['@id'],
+        naturalWidth: x,
+        naturalHeight: y
+      };
+
+      this.resize();
+    });
 
     this.selectedShape = null;
 
     if (!this.readOnly) {
-      this.tools = new DrawingTools(this.g);
+      this.tools = new DrawingTools(this.g, props.config, props.env);
       this._initDrawingMouseTracker();
     }
 
@@ -61,7 +73,7 @@ export default class OSDAnnotationLayer extends EventEmitter {
         const viewportPoint = this.viewer.viewport.pointFromPixel(evt.position);
         const imagePoint = this.viewer.viewport.viewportToImageCoordinates(viewportPoint);
 
-        console.log('mouseup', imagePoint);
+        //console.log('mouseup', imagePoint);
 
         this.tools.current.onMouseUp(evt.originalEvent);
       }
@@ -69,7 +81,7 @@ export default class OSDAnnotationLayer extends EventEmitter {
 
     // Keep tracker disabled until Shift is held
     document.addEventListener('keydown', evt => {
-      if (evt.which === 16) // Shift
+      if (evt.which === 16 && !this.selectedShape) // Shift
         this.mouseTracker.setTracking(true);
     });
 
@@ -236,4 +248,26 @@ export default class OSDAnnotationLayer extends EventEmitter {
     this.svg.parentNode.removeChild(this.svg);
   }
 
+<<<<<<< HEAD
 }
+=======
+  /**
+   * Forces a new ID on the annotation with the given ID.
+   * @returns the updated annotation for convenience
+   */
+  overrideId = (originalId, forcedId) => {
+    // Update SVG shape data attribute
+    const shape = this.findShape(originalId);
+    shape.setAttribute('data-id', forcedId);
+
+    // Update annotation
+    const { annotation } = shape;
+
+    const updated = annotation.clone({ id : forcedId });
+    shape.annotation = updated;
+
+    return updated;
+  }
+
+}
+>>>>>>> 1697f5fe9f9a3b14e2c0bfcd228040fe86ad38be
