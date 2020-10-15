@@ -1,11 +1,11 @@
 [
-  { 
+  {
     "@context": "http://www.w3.org/ns/anno.jsonld",
     "id": "#07475897-d2eb-4dce-aa12-ecb50771c734",
     "type": "Annotation",
     "body": [{
       "type": "TextualBody",
-      "value": "Annotation #2"
+      "value": "VP Accounting"
     }],
     "target": {
       "selector": {

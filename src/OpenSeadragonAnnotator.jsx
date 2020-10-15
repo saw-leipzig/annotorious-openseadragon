@@ -30,9 +30,9 @@ export default class OpenSeadragonAnnotator extends Component {
   handleSelect = evt => {
     const { annotation, element, skipEvent } = evt;
     if (annotation) {
-      this.setState({ 
-        selectedAnnotation: annotation, 
-        selectedDOMElement: element 
+      this.setState({
+        selectedAnnotation: annotation,
+        selectedDOMElement: element
       });
 
       if (!annotation.isSelection && !skipEvent)
@@ -45,12 +45,12 @@ export default class OpenSeadragonAnnotator extends Component {
   handleMoveSelection = selectedDOMElement =>
     this.setState({ selectedDOMElement });
 
-  /**************************/  
+  /**************************/
   /* Annotation CRUD events */
-  /**************************/  
+  /**************************/
 
   onCreateOrUpdateAnnotation = method => (annotation, previous) => {
-    this.clearState();    
+    this.clearState();
     this.annotationLayer.deselect();
     this.annotationLayer.addOrUpdateAnnotation(annotation, previous);
 
@@ -72,16 +72,16 @@ export default class OpenSeadragonAnnotator extends Component {
       this.props.onSelectionCanceled(annotation);
   }
 
-  /****************/               
+  /****************/
   /* External API */
   /****************/
 
   addAnnotation = annotation =>
     this.annotationLayer.addOrUpdateAnnotation(annotation.clone());
-  
+
   fitBounds = (annotationOrId, immediately) =>
     this.annotationLayer.fitBounds(annotationOrId, immediately);
-  
+
   getAnnotations = () =>
     this.annotationLayer.getAnnotations().map(a => a.clone());
 
@@ -91,21 +91,29 @@ export default class OpenSeadragonAnnotator extends Component {
   removeAnnotation = annotation =>
     this.annotationLayer.removeAnnotation(annotation.clone());
 
+  highlight = arg => {
+      const annotation = this.annotationLayer.highlight(arg);
+    }
+
+  dehighlight = arg => {
+      const annotation = this.annotationLayer.dehighlight(arg);
+    }
+
   selectAnnotation = arg => {
     const annotation = this.annotationLayer.selectAnnotation(arg);
-    
-    if (annotation) 
+
+    if (annotation)
       return annotation.clone();
-    else 
+    else
       this.clearState(); // Deselect
   }
-  
+
   setAnnotations = annotations =>
     this.annotationLayer.init(annotations.map(a => a.clone()));
 
   setDrawingEnabled = enable =>
     this.annotationLayer.setDrawingEnabled(enable);
-  
+
   setDrawingTool = shape =>
     this.annotationLayer.setDrawingTool(shape);
 
@@ -122,8 +130,7 @@ export default class OpenSeadragonAnnotator extends Component {
           onAnnotationDeleted={this.onDeleteAnnotation}
           onCancel={this.onCancelAnnotation}>
 
-          <Editor.CommentWidget />
-          <Editor.TagWidget vocabulary={this.props.tagVocabulary} />
+          <Editor.TreeWidget tree={this.props.tree}  image={this.props.image} />
 
         </Editor>
       )

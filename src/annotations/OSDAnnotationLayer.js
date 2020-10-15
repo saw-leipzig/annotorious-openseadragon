@@ -37,7 +37,7 @@ export default class OSDAnnotationLayer extends EventEmitter {
 
   /** Initializes the OSD MouseTracker used for drawing **/
   _initDrawingMouseTracker = () => {
-    this.tools.on('complete', shape => { 
+    this.tools.on('complete', shape => {
       this.mouseTracker.setTracking(false);
       this.selectShape(shape);
     });
@@ -62,7 +62,7 @@ export default class OSDAnnotationLayer extends EventEmitter {
         const imagePoint = this.viewer.viewport.viewportToImageCoordinates(viewportPoint);
 
         console.log('mouseup', imagePoint);
-        
+
         this.tools.current.onMouseUp(evt.originalEvent);
       }
     }).setTracking(false);
@@ -117,7 +117,7 @@ export default class OSDAnnotationLayer extends EventEmitter {
 
     this.selectedShape = shape;
 
-    this.emit('select', { annotation, element: shape, skipEvent }); 
+    this.emit('select', { annotation, element: shape, skipEvent });
   }
 
   init = annotations => {
@@ -125,7 +125,7 @@ export default class OSDAnnotationLayer extends EventEmitter {
     shapes.forEach(s => this.g.removeChild(s));
     annotations.forEach(this.addAnnotation);
   }
-  
+
   resize() {
     // Current upper left corner
     const p = this.viewer.viewport.pixelFromPoint(new OpenSeadragon.Point(0, 0), true);
@@ -163,10 +163,24 @@ export default class OSDAnnotationLayer extends EventEmitter {
       this.deselect();
 
     const shape = this.findShape(annotation);
+    //console.log(shape);
     if (shape)
       shape.parentNode.removeChild(shape);
   }
-
+  highlight = annotationOrId =>{
+    const selected = this.findShape(annotationOrId);
+    if (selected){
+      selected.lastChild.style.fill="green";
+      selected.lastChild.style["fill-opacity"]=0.5;
+    }
+  }
+  dehighlight = annotationOrId =>{
+    const selected = this.findShape(annotationOrId);
+    if (selected){
+      selected.lastChild.style.fill="transparent";
+      selected.lastChild.style["fill-opacity"]= null;
+    }
+  }
   selectAnnotation = annotationOrId => {
     // Deselect first
     if (this.selectedShape)
@@ -193,17 +207,17 @@ export default class OSDAnnotationLayer extends EventEmitter {
       const center = this.viewer.viewport.windowToViewportCoordinates(new OpenSeadragon.Point(x, y));
 
       this.viewer.viewport.panTo(center, immediately);
-    }    
+    }
   }
 
   fitBounds = (annotationOrId, immediately) => {
     const shape = this.findShape(annotationOrId);
     if (shape) {
-      const { x, y, w, h } = parseRectFragment(shape.annotation);      
+      const { x, y, w, h } = parseRectFragment(shape.annotation);
       const rect = this.viewer.viewport.imageToViewportRectangle(x, y, w, h);
-      
+
       this.viewer.viewport.fitBounds(rect, immediately);
-    }    
+    }
   }
 
   setDrawingEnabled = enable =>
