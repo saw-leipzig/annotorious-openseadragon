@@ -240,4 +240,22 @@ export default class OSDAnnotationLayer extends EventEmitter {
     this.svg.parentNode.removeChild(this.svg);
   }
 
+  /**
+   * Forces a new ID on the annotation with the given ID.
+   * @returns the updated annotation for convenience
+   */
+  overrideId = (originalId, forcedId) => {
+    // Update SVG shape data attribute
+    const shape = this.findShape(originalId);
+    shape.setAttribute('data-id', forcedId);
+
+    // Update annotation
+    const { annotation } = shape;
+
+    const updated = annotation.clone({ id : forcedId });
+    shape.annotation = updated;
+
+    return updated;
+  }
+
 }

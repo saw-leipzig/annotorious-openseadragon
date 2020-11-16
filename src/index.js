@@ -3,10 +3,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Emitter from 'tiny-emitter';
 import OpenSeadragonAnnotator from './OpenSeadragonAnnotator';
-import { Environment, WebAnnotation, addPolyfills, setLocale } from '@recogito/recogito-client-core';
-
-import '@babel/polyfill';
-addPolyfills(); // Extra polyfills that babel doesn't include
+import {
+  WebAnnotation,
+  createEnvironment,
+  setLocale
+} from '@recogito/recogito-client-core';
 
 import '@recogito/recogito-client-core/themes/default';
 
@@ -16,6 +17,8 @@ class OSDAnnotorious {
     const config = conf || {};
 
     this._app = React.createRef();
+
+    this._emitter = new Emitter();
 
     this._emitter = new Emitter();
 
@@ -85,7 +88,11 @@ class OSDAnnotorious {
     this._app.current.addAnnotation(new WebAnnotation(annotation));
 
   clearAuthInfo = () =>
+<<<<<<< HEAD
     Environment.user = null;
+=======
+    this._env.user = null;
+>>>>>>> d62fe50b15cacce168093ab289d426d89af97658
 
   destroy = () =>
     ReactDOM.unmountComponentAtNode(this.appContainerEl);
@@ -148,7 +155,11 @@ class OSDAnnotorious {
     this._app.current.setDrawingTool(shape);
 
   setServerTime = timestamp =>
+<<<<<<< HEAD
     Environment.setServerTime(timestamp);
+=======
+    this._env.setServerTime(timestamp);
+>>>>>>> d62fe50b15cacce168093ab289d426d89af97658
 
 }
 
