@@ -3,13 +3,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Emitter from 'tiny-emitter';
 import OpenSeadragonAnnotator from './OpenSeadragonAnnotator';
-import { 
-  WebAnnotation, 
-  createEnvironment,
-  setLocale 
-} from '@recogito/recogito-client-core';
+import { Environment, WebAnnotation, addPolyfills, setLocale } from '@recogito/recogito-client-core';
 
-import '@recogito/annotorious/src/ImageAnnotator.scss';
+import '@babel/polyfill';
+addPolyfills(); // Extra polyfills that babel doesn't include
+
 import '@recogito/recogito-client-core/themes/default';
 
 class OSDAnnotorious {
@@ -18,10 +16,8 @@ class OSDAnnotorious {
     const config = conf || {};
 
     this._app = React.createRef();
-    
-    this._emitter = new Emitter();
 
-    this._env = createEnvironment();
+    this._emitter = new Emitter();
 
     const viewerEl = viewer.element;
 
@@ -33,32 +29,34 @@ class OSDAnnotorious {
     this.appContainerEl = document.createElement('DIV');
 
     viewerEl.appendChild(this.appContainerEl);
-    
+
     ReactDOM.render(
-      <OpenSeadragonAnnotator 
+      <OpenSeadragonAnnotator
         ref={this._app}
-        viewer={viewer} 
+        viewer={viewer}
         wrapperEl={viewerEl}
-        config={config} 
-        env={this._env}
+        readOnly={config.readOnly}
+        tree = {config.tree}
+        image = {config.image}
+        tagVocabulary={config.tagVocabulary}
         onAnnotationSelected={this.handleAnnotationSelected}
-        onAnnotationCreated={this.handleAnnotationCreated} 
-        onAnnotationUpdated={this.handleAnnotationUpdated} 
+        onAnnotationCreated={this.handleAnnotationCreated}
+        onAnnotationUpdated={this.handleAnnotationUpdated}
         onAnnotationDeleted={this.handleAnnotationDeleted}
         onMouseEnterAnnotation={this.handleMouseEnterAnnotation}
-        onMouseLeaveAnnotation={this.handleMouseLeaveAnnotation} 
+        onMouseLeaveAnnotation={this.handleMouseLeaveAnnotation}
         onSelectionCanceled={this.handleSelectionCanceled} />, this.appContainerEl);
   }
 
-  /********************/               
+  /********************/
   /*  External events */
-  /********************/  
+  /********************/
 
   handleSelectionCanceled = annotation =>
     this._emitter.emit('cancelSelection', annotation._stub);
 
-  handleAnnotationCreated = (annotation, overrideId) =>
-    this._emitter.emit('createAnnotation', annotation.underlying, overrideId);
+  handleAnnotationCreated = annotation =>
+    this._emitter.emit('createAnnotation', annotation.underlying);
 
   handleAnnotationDeleted = annotation =>
     this._emitter.emit('deleteAnnotation', annotation.underlying);
@@ -69,15 +67,15 @@ class OSDAnnotorious {
   handleMouseLeaveAnnotation = (annotation, evt) =>
     this._emitter.emit('mouseLeaveAnnotation', annotation.underlying, evt);
 
-  handleAnnotationSelected = annotation => 
+  handleAnnotationSelected = annotation =>
     this._emitter.emit('selectAnnotation', annotation.underlying);
 
   handleAnnotationUpdated = (annotation, previous) =>
     this._emitter.emit('updateAnnotation', annotation.underlying, previous.underlying);
 
-  /********************/               
+  /********************/
   /*  External API    */
-  /********************/  
+  /********************/
 
   // Common shorthand for handling annotationOrId args
   _wrap = annotationOrId =>
@@ -87,8 +85,8 @@ class OSDAnnotorious {
     this._app.current.addAnnotation(new WebAnnotation(annotation));
 
   clearAuthInfo = () =>
-    this._env.user = null;
-  
+    Environment.user = null;
+
   destroy = () =>
     ReactDOM.unmountComponentAtNode(this.appContainerEl);
 
@@ -99,12 +97,23 @@ class OSDAnnotorious {
     const annotations = this._app.current.getAnnotations();
     return annotations.map(a => a.underlying);
   }
-  
+
   loadAnnotations = url => axios.get(url).then(response => {
     const annotations = response.data.map(a => new WebAnnotation(a));
     this._app.current.setAnnotations(annotations);
     return annotations;
   });
+  loadAnnotationsfromObject = annos => {
+    this._app.current.setAnnotations(annos);
+    return annotations;
+  };
+  highlightAnnotation = annotationOrId => {
+    this._app.current.highlight(this._wrap(annotationOrId));
+  };
+
+  dehighlightAnnotation = annotationOrId => {
+    this._app.current.dehighlight(this._wrap(annotationOrId));
+  };
 
   off = (event, callback) =>
     this._emitter.off(event, callback);
@@ -122,7 +131,7 @@ class OSDAnnotorious {
     const selected = this._app.current.selectAnnotation(this._wrap(annotationOrId));
     return selected?.underlying;
   }
-  
+
   setAnnotations = annotations => {
     const safe = annotations || []; // Allow null for clearning all current annotations
     const webannotations = safe.map(a => new WebAnnotation(a));
@@ -130,7 +139,7 @@ class OSDAnnotorious {
   }
 
   setAuthInfo = authinfo =>
-    this._env.user = authinfo;
+    Environment.user = authinfo;
 
   setDrawingEnabled = enable =>
     this._app.current.setDrawingEnabled(enable);
@@ -138,10 +147,10 @@ class OSDAnnotorious {
   setDrawingTool = shape =>
     this._app.current.setDrawingTool(shape);
 
-  setServerTime = timestamp => 
-    this._env.setServerTime(timestamp);
+  setServerTime = timestamp =>
+    Environment.setServerTime(timestamp);
 
 }
 
 export default (viewer, config) =>
-  new OSDAnnotorious(viewer, config); 
+  new OSDAnnotorious(viewer, config);
